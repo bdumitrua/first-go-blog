@@ -11,6 +11,7 @@ func main() {
 	postService := posts.NewService(postRepo)
 	postController := posts.NewController(postService)
 
+	http.HandleFunc("/posts", postController.HandleRoutes)
 	http.HandleFunc("/posts/", postController.HandleRoutes)
 
 	fmt.Println("Server started at :8080")

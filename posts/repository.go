@@ -8,6 +8,7 @@ import (
 type Repository interface {
 	GetAll() (*[]Post, error)
 	GetById(postId int) (*Post, error)
+	CreatePost(newPost Post) (string, error)
 }
 
 type repositoryImpl struct {
@@ -30,4 +31,11 @@ func (r *repositoryImpl) GetById(postId int) (*Post, error) {
 	}
 
 	return nil, errors.New("Post with id " + fmt.Sprint(postId) + " not found")
+}
+
+func (r *repositoryImpl) CreatePost(newPost Post) (string, error) {
+	newPost.ID = len(r.posts) + 1
+	r.posts = append(r.posts, newPost)
+
+	return "Post created successfully", nil
 }

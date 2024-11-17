@@ -29,12 +29,29 @@ func (pc *Controller) HandleRoutes(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			pc.GetPostById(w, postId)
+		default:
+			http.Error(w, "Route not found", http.StatusNotFound)
 		}
+	} else {
+		switch r.Method {
+		case http.MethodGet:
+			pc.GetAll(w)
+		case http.MethodPost:
+			pc.CreatePost(w, r)
+		default:
+			http.Error(w, "Route not found", http.StatusNotFound)
+		}
+	}
+}
 
+func (pc *Controller) GetAll(w http.ResponseWriter) {
+	posts, err := pc.service.GetAll()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	http.Error(w, "Route not found", http.StatusNotFound)
+	json.NewEncoder(w).Encode(posts)
 }
 
 func (pc *Controller) GetPostById(w http.ResponseWriter, postId int) {
@@ -45,4 +62,20 @@ func (pc *Controller) GetPostById(w http.ResponseWriter, postId int) {
 	}
 
 	json.NewEncoder(w).Encode(post)
+}
+
+func (pc *Controller) CreatePost(w http.ResponseWriter, r *http.Request) {
+	var newPost Post
+	if err := json.NewDecoder(r.Body).Decode(&newPost); err != nil {
+		http.Error(w, "Invalid post data", http.StatusBadRequest)
+		return
+	}
+
+	mes, err := pc.service.CreatePost(newPost)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(mes)
 }
