@@ -29,6 +29,10 @@ func (pc *Controller) HandleRoutes(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			pc.GetPostById(w, postId)
+		case http.MethodPut:
+			pc.UpdatePost(w, r, postId)
+		case http.MethodDelete:
+			pc.DeletePost(w, postId)
 		default:
 			http.Error(w, "Route not found", http.StatusNotFound)
 		}
@@ -72,6 +76,32 @@ func (pc *Controller) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mes, err := pc.service.CreatePost(newPost)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(mes)
+}
+
+func (pc *Controller) UpdatePost(w http.ResponseWriter, r *http.Request, postId int) {
+	var updatedPost Post
+	if err := json.NewDecoder(r.Body).Decode(&updatedPost); err != nil {
+		http.Error(w, "Invalid update post data", http.StatusBadRequest)
+		return
+	}
+
+	mes, err := pc.service.UpdatePost(updatedPost, postId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(mes)
+}
+
+func (pc *Controller) DeletePost(w http.ResponseWriter, postId int) {
+	mes, err := pc.service.DeletePost(postId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
