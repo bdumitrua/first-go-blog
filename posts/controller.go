@@ -3,6 +3,8 @@ package posts
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type Controller struct {
@@ -13,13 +15,34 @@ func NewController(service Service) *Controller {
 	return &Controller{service: service}
 }
 
-func (c *Controller) HandleRoutes(w http.ResponseWriter, r *http.Request) {
+func (pc *Controller) HandleRoutes(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var posts, err = c.service.GetAll()
-	if err != nil {
-		http.Error(w, "Something gone wrong while requested posts", 500)
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) >= 3 && parts[2] != "" {
+		postId, err := strconv.Atoi(parts[2])
+		if err != nil {
+			http.Error(w, "Post ID must be integer", http.StatusBadRequest)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			pc.GetPostById(w, postId)
+		}
+
+		return
 	}
 
-	json.NewEncoder(w).Encode(posts)
+	http.Error(w, "Route not found", http.StatusNotFound)
+}
+
+func (pc *Controller) GetPostById(w http.ResponseWriter, postId int) {
+	post, err := pc.service.GetById(postId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(post)
 }

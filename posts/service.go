@@ -2,6 +2,7 @@ package posts
 
 type Service interface {
 	GetAll() (*[]Post, error)
+	GetById(postId int) (*Post, error)
 }
 
 type serviceImpl struct {
@@ -14,4 +15,8 @@ func NewService(repo Repository) Service {
 
 func (s *serviceImpl) GetAll() (*[]Post, error) {
 	return s.repo.GetAll()
+}
+
+func (s *serviceImpl) GetById(postId int) (*Post, error) {
+	return s.repo.GetById(postId)
 }
