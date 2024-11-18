@@ -1,7 +1,6 @@
 package posts
 
 import (
-	"encoding/json"
 	"errors"
 	"first-blog-api/utils"
 	"net/http"
@@ -104,15 +103,14 @@ func (req *UpdatePostRequest) Validate() (map[string]interface{}, error) {
 }
 
 func (req *UpdatePostRequest) ToDTO() (*PostDTO, error) {
-	_, err := req.Validate()
+	reqData, err := req.Validate()
 	if err != nil {
 		return nil, err
 	}
 
-	var postDTO PostDTO
-	if err := json.NewDecoder(req.GetRequest().Body).Decode(&postDTO); err != nil {
-		http.Error(req.Writer(), "Invalid update post data", http.StatusBadRequest)
-		return nil, errors.New("invalid update post data")
+	postDTO := PostDTO{
+		Title:   reqData["title"].(string),
+		Content: reqData["content"].(string),
 	}
 
 	return &postDTO, nil
