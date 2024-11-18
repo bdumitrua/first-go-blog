@@ -1,13 +1,17 @@
 package main
 
 import (
+	"first-blog-api/db"
 	"first-blog-api/posts"
 	"fmt"
 	"net/http"
 )
 
 func main() {
-	postRepo := posts.NewRepository()
+	// Подключаемся к базе данных
+	db.Connect()
+
+	postRepo := posts.NewRepository(db.DB)
 	postService := posts.NewService(postRepo)
 	postController := posts.NewController(postService)
 

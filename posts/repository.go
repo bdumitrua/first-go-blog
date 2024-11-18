@@ -1,12 +1,13 @@
 package posts
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 )
 
 type Repository interface {
-	GetAll() (*[]Post, error)
+	GetAll() ([]Post, error)
 	GetById(postId int) (*Post, error)
 	CreatePost(newPost Post) (string, error)
 	UpdatePost(newPost Post, postId int) (string, error)
@@ -14,59 +15,81 @@ type Repository interface {
 }
 
 type repositoryImpl struct {
-	posts []Post
+	db *sql.DB
 }
 
-func NewRepository() Repository {
-	return &repositoryImpl{posts: posts}
+func NewRepository(db *sql.DB) Repository {
+	return &repositoryImpl{db: db}
 }
 
-func (r *repositoryImpl) GetAll() (*[]Post, error) {
-	return &r.posts, nil
+func (r *repositoryImpl) GetAll() ([]Post, error) {
+	posts := []Post{}
+
+	rows, err := r.db.Query("SELECT id, title, content FROM posts")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var post Post
+		err := rows.Scan(&post.ID, &post.Title, &post.Content)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+
+	return posts, nil
 }
 
 func (r *repositoryImpl) GetById(postId int) (*Post, error) {
-	for _, post := range r.posts {
-		if post.ID == postId {
-			return &post, nil
-		}
+	var post Post
+
+	err := r.db.QueryRow("SELECT id, title, content FROM posts WHERE id = ?", postId).Scan(&post.ID, &post.Title, &post.Content)
+	if err == sql.ErrNoRows {
+		return nil, errors.New("Post not found")
+	} else if err != nil {
+		return nil, err
 	}
 
-	return nil, errors.New("Post with id " + fmt.Sprint(postId) + " not found")
+	return &post, nil
 }
 
 func (r *repositoryImpl) CreatePost(newPost Post) (string, error) {
-	newPost.ID = r.posts[len(r.posts)-1].ID + 1
-	r.posts = append(r.posts, newPost)
+	result, err := r.db.Exec("INSERT INTO posts (title, content) VALUES (?, ?)", newPost.Title, newPost.Content)
+	if err != nil {
+		return "", err
+	}
 
-	return "Post created successfully", nil
+	id, _ := result.LastInsertId()
+	return fmt.Sprintf("Post created successfully with ID %d", id), nil
 }
 
 func (r *repositoryImpl) UpdatePost(updatedPost Post, postId int) (string, error) {
-	for i, post := range r.posts {
-		if post.ID == postId {
-			r.posts[i].Title = updatedPost.Title
-			r.posts[i].Content = updatedPost.Content
-
-			return "Post updated successfully", nil
-		}
+	result, err := r.db.Exec("UPDATE posts SET title = ?, content = ? WHERE id = ?", updatedPost.Title, updatedPost.Content, postId)
+	if err != nil {
+		return "", err
 	}
 
-	return "Post with id " + fmt.Sprint(postId) + " not found", errors.New("Post not found")
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return "", errors.New("Post not found")
+	}
+
+	return "Post updated successfully", nil
 }
 
 func (r *repositoryImpl) DeletePost(postId int) (string, error) {
-	for i, post := range r.posts {
-		if post.ID == postId {
-			if len(r.posts) == i+1 {
-				r.posts = posts[:i]
-			} else {
-				r.posts = append(posts[:i], posts[i+1:]...)
-			}
-
-			return "Post delete successfully", nil
-		}
+	result, err := r.db.Exec("DELETE FROM posts WHERE id = ?", postId)
+	if err != nil {
+		return "", err
 	}
 
-	return "Post with id " + fmt.Sprint(postId) + " not found", errors.New("Post not found")
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return "", errors.New("Post not found")
+	}
+
+	return "Post deleted successfully", nil
 }

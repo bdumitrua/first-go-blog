@@ -1,7 +1,7 @@
 package posts
 
 type Service interface {
-	GetAll() (*[]Post, error)
+	GetAll() ([]Post, error)
 	GetById(postId int) (*Post, error)
 	CreatePost(newPostDto *PostDTO) (string, error)
 	UpdatePost(updatePostDto *PostDTO, postId int) (string, error)
@@ -16,7 +16,7 @@ func NewService(repo Repository) Service {
 	return &serviceImpl{repo: repo}
 }
 
-func (s *serviceImpl) GetAll() (*[]Post, error) {
+func (s *serviceImpl) GetAll() ([]Post, error) {
 	return s.repo.GetAll()
 }
 
