@@ -2,12 +2,11 @@ package auth
 
 import (
 	"database/sql"
+	"errors"
 )
 
 type Repository interface {
 	Login(loginDto *LoginDto) (*User, error)
-	Logout(token string) (*User, error)
-	Refresh(token string) (*User, error)
 }
 
 type repositoryImpl struct {
@@ -19,13 +18,14 @@ func NewRepository(db *sql.DB) Repository {
 }
 
 func (r *repositoryImpl) Login(loginDto *LoginDto) (*User, error) {
-	return nil, nil
-}
+	var user User
 
-func (r *repositoryImpl) Logout(token string) (*User, error) {
-	return nil, nil
-}
+	err := r.db.QueryRow("SELECT id, name, email FROM users WHERE email = ? AND WHERE password = ?", loginDto.Email, loginDto.Password).Scan(&user.ID, &user.Name, &user.Email)
+	if err == sql.ErrNoRows {
+		return nil, errors.New("invalid credentials")
+	} else if err != nil {
+		return nil, err
+	}
 
-func (r *repositoryImpl) Refresh(token string) (*User, error) {
-	return nil, nil
+	return &user, nil
 }

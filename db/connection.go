@@ -44,4 +44,18 @@ func createTables() {
 	}
 
 	fmt.Println("Таблица posts проверена/создана.")
+
+	query = `
+	CREATE TABLE IF NOT EXISTS users (
+		id INT AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(255) NOT NULL,
+		email VARCHAR(255) NOT NULL,
+		password VARCHAR(255) NOT NULL
+	);`
+	_, err = DB.Exec(query)
+	if err != nil {
+		log.Fatalf("Ошибка при создании таблицы: %v", err)
+	}
+
+	fmt.Println("Таблица users проверена/создана.")
 }

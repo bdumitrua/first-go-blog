@@ -7,10 +7,9 @@ import (
 )
 
 type Service interface {
-	Login(loginDto *LoginDto) (*User, error)
+	Login(loginDto *LoginDto) (string, error)
 	Register(dto *users.UserCreateDTO) (string, error)
-	Logout(token string) (*User, error)
-	Refresh(token string) (*User, error)
+	Refresh(token string) (string, error)
 }
 
 type serviceImpl struct {
@@ -22,24 +21,41 @@ func NewService(repo Repository) Service {
 	return &serviceImpl{repo: repo}
 }
 
-func (s *serviceImpl) Login(loginDto *LoginDto) (*User, error) {
+func (s *serviceImpl) Login(loginDto *LoginDto) (string, error) {
 	hashedPassword, err := utils.HashPassword(loginDto.Password)
 	if err != nil {
-		return nil, errors.New("error while preparing data")
+		return "", errors.New("error while preparing data")
 	}
 
 	loginDto.Password = hashedPassword
-	return s.repo.Login(loginDto)
+
+	user, err := s.repo.Login(loginDto)
+	if err != nil {
+		return "", err
+	}
+
+	newToken, err := GenerateJWT(user.ID)
+	if err != nil {
+		return "", err
+	}
+
+	return newToken, nil
 }
 
 func (s *serviceImpl) Register(dto *users.UserCreateDTO) (string, error) {
 	return s.userService.CreateUser(dto)
 }
 
-func (s *serviceImpl) Logout(token string) (*User, error) {
-	return s.repo.Logout(token)
-}
+func (s *serviceImpl) Refresh(token string) (string, error) {
+	claims, err := ValidateJWT(token)
+	if err != nil {
+		return "", err
+	}
 
-func (s *serviceImpl) Refresh(token string) (*User, error) {
-	return s.repo.Refresh(token)
+	newToken, err := GenerateJWT(claims.UserId)
+	if err != nil {
+		return "", err
+	}
+
+	return newToken, nil
 }

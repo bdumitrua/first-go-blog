@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"first-blog-api/users"
 	"first-blog-api/utils"
 	"net/http"
 )
@@ -45,6 +46,19 @@ func (req *LoginRequest) Validate() (map[string]interface{}, error) {
 	}
 
 	return json, nil
+}
+
+func (req *LoginRequest) ToDto() (*LoginDto, error) {
+	reqData, err := req.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginDto{
+		Email:    reqData["email"].(string),
+		Password: reqData["password"].(string),
+	}, nil
+
 }
 
 type RegisterRequest struct {
@@ -98,4 +112,18 @@ func (req *RegisterRequest) Validate() (map[string]interface{}, error) {
 	}
 
 	return json, nil
+}
+
+func (req *RegisterRequest) ToDto() (*users.UserCreateDTO, error) {
+	reqData, err := req.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return &users.UserCreateDTO{
+		Name:     reqData["name"].(string),
+		Email:    reqData["email"].(string),
+		Password: reqData["password"].(string),
+	}, nil
+
 }
