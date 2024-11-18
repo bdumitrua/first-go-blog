@@ -2,14 +2,13 @@ package users
 
 import (
 	"errors"
-
-	"golang.org/x/crypto/bcrypt"
+	"first-blog-api/utils"
 )
 
 type Service interface {
 	GetById(userId int) (*User, error)
-	CreateUser(createUserDto *UserCreateDTO) (string, error)
-	UpdateUser(updateUserDto *UserUpdateDTO, userId int) (string, error)
+	CreateUser(userCreateDto *UserCreateDTO) (string, error)
+	UpdateUser(userUpdateDto *UserUpdateDTO, userId int) (string, error)
 }
 
 type serviceImpl struct {
@@ -24,21 +23,16 @@ func (s *serviceImpl) GetById(userId int) (*User, error) {
 	return s.repo.GetById(userId)
 }
 
-func (s *serviceImpl) CreateUser(newUserDTO *UserCreateDTO) (string, error) {
-	hashedPassword, err := HashPassword(newUserDTO.Password)
+func (s *serviceImpl) CreateUser(userCreateDto *UserCreateDTO) (string, error) {
+	hashedPassword, err := utils.HashPassword(userCreateDto.Password)
 	if err != nil {
 		return "error while processing password security", errors.New("error while preparing data")
 	}
 
-	newUserDTO.Password = hashedPassword
-	return s.repo.CreateUser(newUserDTO)
+	userCreateDto.Password = hashedPassword
+	return s.repo.CreateUser(userCreateDto)
 }
 
-func (s *serviceImpl) UpdateUser(updateUserDto *UserUpdateDTO, userId int) (string, error) {
-	return s.repo.UpdateUser(updateUserDto, userId)
-}
-
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
+func (s *serviceImpl) UpdateUser(userUpdateDto *UserUpdateDTO, userId int) (string, error) {
+	return s.repo.UpdateUser(userUpdateDto, userId)
 }
