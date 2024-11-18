@@ -3,8 +3,8 @@ package posts
 type Service interface {
 	GetAll() (*[]Post, error)
 	GetById(postId int) (*Post, error)
-	CreatePost(newPost Post) (string, error)
-	UpdatePost(UpdatePost Post, postId int) (string, error)
+	CreatePost(newPostDto *PostDTO) (string, error)
+	UpdatePost(updatePostDto *PostDTO, postId int) (string, error)
 	DeletePost(postId int) (string, error)
 }
 
@@ -24,12 +24,12 @@ func (s *serviceImpl) GetById(postId int) (*Post, error) {
 	return s.repo.GetById(postId)
 }
 
-func (s *serviceImpl) CreatePost(newPost Post) (string, error) {
-	return s.repo.CreatePost(newPost)
+func (s *serviceImpl) CreatePost(newPostDTO *PostDTO) (string, error) {
+	return s.repo.CreatePost(newPostDTO.ToPost())
 }
 
-func (s *serviceImpl) UpdatePost(newPost Post, postId int) (string, error) {
-	return s.repo.UpdatePost(newPost, postId)
+func (s *serviceImpl) UpdatePost(updatePostDto *PostDTO, postId int) (string, error) {
+	return s.repo.UpdatePost(updatePostDto.ToPost(), postId)
 }
 
 func (s *serviceImpl) DeletePost(postId int) (string, error) {

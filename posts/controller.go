@@ -2,6 +2,7 @@ package posts
 
 import (
 	"encoding/json"
+	"first-blog-api/utils"
 	"net/http"
 	"strconv"
 	"strings"
@@ -28,84 +29,82 @@ func (pc *Controller) HandleRoutes(w http.ResponseWriter, r *http.Request) {
 
 		switch r.Method {
 		case http.MethodGet:
-			pc.GetPostById(w, postId)
+			pc.GetPostById(utils.MakeRequest(w, r), postId)
 		case http.MethodPut:
-			pc.UpdatePost(w, r, postId)
+			pc.UpdatePost(MakeUpdateRequest(w, r), postId)
 		case http.MethodDelete:
-			pc.DeletePost(w, postId)
+			pc.DeletePost(utils.MakeRequest(w, r), postId)
 		default:
 			http.Error(w, "Route not found", http.StatusNotFound)
 		}
 	} else {
 		switch r.Method {
 		case http.MethodGet:
-			pc.GetAll(w)
+			pc.GetAll(utils.MakeRequest(w, r))
 		case http.MethodPost:
-			pc.CreatePost(w, r)
+			pc.CreatePost(MakeCreateRequest(w, r))
 		default:
 			http.Error(w, "Route not found", http.StatusNotFound)
 		}
 	}
 }
 
-func (pc *Controller) GetAll(w http.ResponseWriter) {
+func (pc *Controller) GetAll(req *utils.Request) {
 	posts, err := pc.service.GetAll()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(req.Writer(), err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(posts)
+	json.NewEncoder(req.Writer()).Encode(posts)
 }
 
-func (pc *Controller) GetPostById(w http.ResponseWriter, postId int) {
+func (pc *Controller) GetPostById(req *utils.Request, postId int) {
 	post, err := pc.service.GetById(postId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(req.Writer(), err.Error(), http.StatusNotFound)
 		return
 	}
 
-	json.NewEncoder(w).Encode(post)
+	json.NewEncoder(req.Writer()).Encode(post)
 }
 
-func (pc *Controller) CreatePost(w http.ResponseWriter, r *http.Request) {
-	var newPost Post
-	if err := json.NewDecoder(r.Body).Decode(&newPost); err != nil {
-		http.Error(w, "Invalid post data", http.StatusBadRequest)
-		return
-	}
-
-	mes, err := pc.service.CreatePost(newPost)
+func (pc *Controller) CreatePost(req *CreatePostRequest) {
+	newPostDTO, err := req.ToDTO()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(mes)
-}
-
-func (pc *Controller) UpdatePost(w http.ResponseWriter, r *http.Request, postId int) {
-	var updatedPost Post
-	if err := json.NewDecoder(r.Body).Decode(&updatedPost); err != nil {
-		http.Error(w, "Invalid update post data", http.StatusBadRequest)
-		return
-	}
-
-	mes, err := pc.service.UpdatePost(updatedPost, postId)
+	mes, err := pc.service.CreatePost(newPostDTO)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(req.Writer(), err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(mes)
+	json.NewEncoder(req.Writer()).Encode(mes)
 }
 
-func (pc *Controller) DeletePost(w http.ResponseWriter, postId int) {
+func (pc *Controller) UpdatePost(req *UpdatePostRequest, postId int) {
+	updatePostDTO, err := req.ToDTO()
+	if err != nil {
+		return
+	}
+
+	mes, err := pc.service.UpdatePost(updatePostDTO, postId)
+	if err != nil {
+		http.Error(req.Writer(), err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(req.Writer()).Encode(mes)
+}
+
+func (pc *Controller) DeletePost(req *utils.Request, postId int) {
 	mes, err := pc.service.DeletePost(postId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(req.Writer(), err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(mes)
+	json.NewEncoder(req.Writer()).Encode(mes)
 }
