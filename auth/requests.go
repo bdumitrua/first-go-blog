@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"first-blog-api/users"
 	"first-blog-api/utils"
 	"net/http"
 )
@@ -28,7 +27,7 @@ func (req *LoginRequest) Validate() (map[string]interface{}, error) {
 		return json, errors.New("field 'email' is required and must be a string")
 	}
 
-	if len([]rune(email)) > 5 {
+	if len([]rune(email)) < 5 {
 		http.Error(req.Writer(), "Field 'email' must be longer than 5 symbols", http.StatusBadRequest)
 		return json, errors.New("field 'email' must be longer than 5 symbols")
 	}
@@ -40,7 +39,7 @@ func (req *LoginRequest) Validate() (map[string]interface{}, error) {
 		return json, errors.New("field 'password' is required and must be a string")
 	}
 
-	if len([]rune(password)) > 8 {
+	if len([]rune(password)) < 8 {
 		http.Error(req.Writer(), "Field 'password' must be longer than 8 symbols", http.StatusBadRequest)
 		return json, errors.New("field 'password' must be longer than 8 symbols")
 	}
@@ -82,7 +81,7 @@ func (req *RegisterRequest) Validate() (map[string]interface{}, error) {
 		return json, errors.New("field 'name' is required and must be a string")
 	}
 
-	if len([]rune(name)) > 2 {
+	if len([]rune(name)) < 2 {
 		http.Error(req.Writer(), "Field 'name' must be longer than 5 symbols", http.StatusBadRequest)
 		return json, errors.New("field 'name' must be longer than 5 symbols")
 	}
@@ -94,7 +93,7 @@ func (req *RegisterRequest) Validate() (map[string]interface{}, error) {
 		return json, errors.New("field 'email' is required and must be a string")
 	}
 
-	if len([]rune(email)) > 5 {
+	if len([]rune(email)) < 5 {
 		http.Error(req.Writer(), "Field 'email' must be longer than 5 symbols", http.StatusBadRequest)
 		return json, errors.New("field 'email' must be longer than 5 symbols")
 	}
@@ -106,7 +105,7 @@ func (req *RegisterRequest) Validate() (map[string]interface{}, error) {
 		return json, errors.New("field 'password' is required and must be a string")
 	}
 
-	if len([]rune(password)) > 8 {
+	if len([]rune(password)) < 8 {
 		http.Error(req.Writer(), "Field 'password' must be longer than 8 symbols", http.StatusBadRequest)
 		return json, errors.New("field 'password' must be longer than 8 symbols")
 	}
@@ -114,13 +113,13 @@ func (req *RegisterRequest) Validate() (map[string]interface{}, error) {
 	return json, nil
 }
 
-func (req *RegisterRequest) ToDto() (*users.UserCreateDTO, error) {
+func (req *RegisterRequest) ToDto() (*UserCreateDTO, error) {
 	reqData, err := req.Validate()
 	if err != nil {
 		return nil, err
 	}
 
-	return &users.UserCreateDTO{
+	return &UserCreateDTO{
 		Name:     reqData["name"].(string),
 		Email:    reqData["email"].(string),
 		Password: reqData["password"].(string),

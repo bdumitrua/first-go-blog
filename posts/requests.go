@@ -27,7 +27,7 @@ func (req *CreatePostRequest) Validate() (map[string]interface{}, error) {
 		return json, errors.New("field 'title' is required and must be a string")
 	}
 
-	if len([]rune(title)) > 40 {
+	if len([]rune(title)) < 40 {
 		http.Error(req.Writer(), "Field 'title' cannot be longer than 40 symbols", http.StatusBadRequest)
 		return json, errors.New("field 'title' cannot be longer than 40 symbols")
 	}
@@ -38,7 +38,7 @@ func (req *CreatePostRequest) Validate() (map[string]interface{}, error) {
 		return json, errors.New("field 'content' is required and must be a string")
 	}
 
-	if len([]rune(content)) > 255 {
+	if len([]rune(content)) < 255 {
 		http.Error(req.Writer(), "Field 'content' cannot be longer than 255 symbols", http.StatusBadRequest)
 		return json, errors.New("field 'content' cannot be longer than 255 symbols")
 	}
@@ -83,7 +83,7 @@ func (req *UpdatePostRequest) Validate() (map[string]interface{}, error) {
 		return json, errors.New("field 'title' is required and must be a string")
 	}
 
-	if len([]rune(title)) > 40 {
+	if len([]rune(title)) < 40 {
 		http.Error(req.Writer(), "Field 'title' cannot be longer than 40 symbols", http.StatusBadRequest)
 		return json, errors.New("field 'title' cannot be longer than 40 symbols")
 	}
@@ -94,7 +94,7 @@ func (req *UpdatePostRequest) Validate() (map[string]interface{}, error) {
 		return json, errors.New("field 'content' is required and must be a string")
 	}
 
-	if len([]rune(content)) > 255 {
+	if len([]rune(content)) < 255 {
 		http.Error(req.Writer(), "Field 'content' cannot be longer than 255 symbols", http.StatusBadRequest)
 		return json, errors.New("field 'content' cannot be longer than 255 symbols")
 	}

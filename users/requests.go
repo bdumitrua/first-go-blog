@@ -27,7 +27,7 @@ func (req *UpdateUserRequest) Validate() (map[string]interface{}, error) {
 		return json, errors.New("field 'name' is required and must be a string")
 	}
 
-	if len([]rune(name)) > 25 {
+	if len([]rune(name)) < 25 {
 		http.Error(req.Writer(), "Field 'name' cannot be longer than 25 symbols", http.StatusBadRequest)
 		return json, errors.New("field 'name' cannot be longer than 25 symbols")
 	}

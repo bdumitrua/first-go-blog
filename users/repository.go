@@ -3,12 +3,10 @@ package users
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 )
 
 type Repository interface {
 	GetById(userId int) (*User, error)
-	CreateUser(newUserDto *UserCreateDTO) (string, error)
 	UpdateUser(updateUserDto *UserUpdateDTO, userId int) (string, error)
 }
 
@@ -31,16 +29,6 @@ func (r *repositoryImpl) GetById(userId int) (*User, error) {
 	}
 
 	return &user, nil
-}
-
-func (r *repositoryImpl) CreateUser(newUserDto *UserCreateDTO) (string, error) {
-	result, err := r.db.Exec("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", newUserDto.Name, newUserDto.Email, newUserDto.Password)
-	if err != nil {
-		return "", err
-	}
-
-	id, _ := result.LastInsertId()
-	return fmt.Sprintf("User created successfully with ID %d", id), nil
 }
 
 func (r *repositoryImpl) UpdateUser(updateUserDto *UserUpdateDTO, userId int) (string, error) {

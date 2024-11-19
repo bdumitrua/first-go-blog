@@ -14,7 +14,7 @@ type key string
 const UserIDKey key = "userId"
 const JwtKey key = "jwt"
 
-var jwtKey = []byte("your_secret_key") // Секретный ключ для подписи токенов
+var jwtSecret = []byte("your_secret_key") // Секретный ключ для подписи токенов
 
 // Claims структура для данных внутри JWT
 type Claims struct {
@@ -37,7 +37,7 @@ func GenerateJWT(userId int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Подписываем токен секретным ключом
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
 		return "", err
 	}
@@ -54,7 +54,7 @@ func ValidateJWT(tokenString string) (*Claims, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return jwtKey, nil
+		return jwtSecret, nil
 	})
 
 	if err != nil {
@@ -80,11 +80,11 @@ func GetUserId(req *utils.Request) (int, error) {
 }
 
 func GetJwtToken(req *utils.Request) (string, error) {
-	userID, ok := req.GetRequest().Context().Value(jwtKey).(string)
+	jwtToken, ok := req.GetRequest().Context().Value(JwtKey).(string)
 	if !ok {
-		http.Error(req.Writer(), "Unauthorized: user ID not found", http.StatusUnauthorized)
+		http.Error(req.Writer(), "Unauthorized: authorization not found", http.StatusUnauthorized)
 		return "", errors.New("unauthorized")
 	}
 
-	return userID, nil
+	return jwtToken, nil
 }

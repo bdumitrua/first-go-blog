@@ -3,10 +3,13 @@ package main
 import (
 	"first-blog-api/auth"
 	"first-blog-api/db"
+	"first-blog-api/middleware"
 	"first-blog-api/posts"
 	"first-blog-api/users"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 func main() {
@@ -25,14 +28,57 @@ func main() {
 	authService := auth.NewService(authRepo)
 	authController := auth.NewController(authService)
 
-	http.HandleFunc("/posts", postController.HandleRoutes)
-	http.HandleFunc("/posts/", postController.HandleRoutes)
+	// Роуты для posts
+	http.Handle("/posts/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 
-	http.HandleFunc("/users", userController.HandleRoutes)
+		parts := strings.Split(r.URL.Path, "/")
+		if len(parts) >= 3 && parts[2] != "" {
+			_, err := strconv.Atoi(parts[2])
+			if err != nil {
+				http.Error(w, "Post ID must be integer", http.StatusBadRequest)
+				return
+			}
+
+			switch r.Method {
+			case http.MethodGet:
+				http.HandleFunc("/posts/", postController.HandleRoutes)
+			case http.MethodPut:
+				middleware.AuthMiddleware(http.HandlerFunc(postController.HandleRoutes)).ServeHTTP(w, r)
+			case http.MethodDelete:
+				middleware.AuthMiddleware(http.HandlerFunc(postController.HandleRoutes)).ServeHTTP(w, r)
+			default:
+				http.Error(w, "Route not found", http.StatusNotFound)
+			}
+		} else {
+			switch r.Method {
+			case http.MethodGet:
+				http.HandleFunc("/posts/", postController.HandleRoutes)
+			case http.MethodPost:
+				middleware.AuthMiddleware(http.HandlerFunc(postController.HandleRoutes)).ServeHTTP(w, r)
+			default:
+				http.Error(w, "Route not found", http.StatusNotFound)
+			}
+		}
+	}))
+
+	http.Handle("/posts", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			http.HandleFunc("/posts", postController.HandleRoutes)
+		case http.MethodPost:
+			middleware.AuthMiddleware(http.HandlerFunc(postController.HandleRoutes)).ServeHTTP(w, r)
+		default:
+			http.Error(w, "Route not found", http.StatusNotFound)
+		}
+	}))
+
+	usersRoutes := http.HandlerFunc(userController.HandleRoutes)
+	http.Handle("/users", middleware.AuthMiddleware(usersRoutes))
 
 	http.HandleFunc("/login", authController.Login)
 	http.HandleFunc("/register", authController.Register)
-	http.HandleFunc("/refresh", authController.Refresh)
+	http.Handle("/refresh", middleware.AuthMiddleware(http.HandlerFunc(authController.Refresh)))
 
 	fmt.Println("Server started at :8080")
 	http.ListenAndServe(":8080", nil)
