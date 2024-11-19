@@ -2,6 +2,7 @@ package posts
 
 import (
 	"encoding/json"
+	"first-blog-api/auth"
 	"first-blog-api/utils"
 	"net/http"
 	"strconv"
@@ -75,7 +76,12 @@ func (pc *Controller) CreatePost(req *CreatePostRequest) {
 		return
 	}
 
-	mes, err := pc.service.CreatePost(newPostDTO)
+	userId, err := auth.GetUserId(&req.Request)
+	if err != nil {
+		return
+	}
+
+	mes, err := pc.service.CreatePost(newPostDTO, userId)
 	if err != nil {
 		http.Error(req.Writer(), err.Error(), http.StatusBadRequest)
 		return
@@ -90,7 +96,12 @@ func (pc *Controller) UpdatePost(req *UpdatePostRequest, postId int) {
 		return
 	}
 
-	mes, err := pc.service.UpdatePost(updatePostDTO, postId)
+	userId, err := auth.GetUserId(&req.Request)
+	if err != nil {
+		return
+	}
+
+	mes, err := pc.service.UpdatePost(updatePostDTO, postId, userId)
 	if err != nil {
 		http.Error(req.Writer(), err.Error(), http.StatusBadRequest)
 		return
@@ -100,7 +111,12 @@ func (pc *Controller) UpdatePost(req *UpdatePostRequest, postId int) {
 }
 
 func (pc *Controller) DeletePost(req *utils.Request, postId int) {
-	mes, err := pc.service.DeletePost(postId)
+	userId, err := auth.GetUserId(req)
+	if err != nil {
+		return
+	}
+
+	mes, err := pc.service.DeletePost(postId, userId)
 	if err != nil {
 		http.Error(req.Writer(), err.Error(), http.StatusBadRequest)
 		return

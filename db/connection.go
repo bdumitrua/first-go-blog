@@ -29,6 +29,7 @@ func Connect() {
 	fmt.Println("Подключение к базе данных успешно!")
 
 	createTables()
+	migrate()
 }
 
 func createTables() {
@@ -58,4 +59,29 @@ func createTables() {
 	}
 
 	fmt.Println("Таблица users проверена/создана.")
+}
+
+func migrate() {
+	checkQuery := `
+	SELECT COUNT(*) 
+	FROM information_schema.columns 
+	WHERE table_schema = DATABASE() AND table_name = 'posts' AND column_name = 'user_id';`
+
+	var count int
+	err := DB.QueryRow(checkQuery).Scan(&count)
+	if err != nil {
+		log.Fatalf("Ошибка при проверке столбца: %v", err)
+	}
+
+	if count == 0 {
+		query := `ALTER TABLE posts ADD COLUMN user_id INT NOT NULL;`
+		_, err := DB.Exec(query)
+		if err != nil {
+			log.Fatalf("Ошибка при миграции таблицы: %v", err)
+		}
+
+		fmt.Println("Миграция прошла успешно: столбец user_id добавлен.")
+	} else {
+		fmt.Println("Миграция не требуется: столбец user_id уже существует.")
+	}
 }

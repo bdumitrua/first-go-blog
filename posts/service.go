@@ -3,9 +3,9 @@ package posts
 type Service interface {
 	GetAll() ([]Post, error)
 	GetById(postId int) (*Post, error)
-	CreatePost(newPostDto *PostDTO) (string, error)
-	UpdatePost(updatePostDto *PostDTO, postId int) (string, error)
-	DeletePost(postId int) (string, error)
+	CreatePost(newPostDto *PostDTO, userId int) (string, error)
+	UpdatePost(updatePostDto *PostDTO, postId int, userId int) (string, error)
+	DeletePost(postId int, userId int) (string, error)
 }
 
 type serviceImpl struct {
@@ -24,14 +24,14 @@ func (s *serviceImpl) GetById(postId int) (*Post, error) {
 	return s.repo.GetById(postId)
 }
 
-func (s *serviceImpl) CreatePost(newPostDTO *PostDTO) (string, error) {
-	return s.repo.CreatePost(newPostDTO.ToPost())
+func (s *serviceImpl) CreatePost(newPostDTO *PostDTO, userId int) (string, error) {
+	return s.repo.CreatePost(newPostDTO.ToPost(), userId)
 }
 
-func (s *serviceImpl) UpdatePost(updatePostDto *PostDTO, postId int) (string, error) {
-	return s.repo.UpdatePost(updatePostDto.ToPost(), postId)
+func (s *serviceImpl) UpdatePost(updatePostDto *PostDTO, postId int, userId int) (string, error) {
+	return s.repo.UpdatePost(updatePostDto.ToPost(), postId, userId)
 }
 
-func (s *serviceImpl) DeletePost(postId int) (string, error) {
-	return s.repo.DeletePost(postId)
+func (s *serviceImpl) DeletePost(postId int, userId int) (string, error) {
+	return s.repo.DeletePost(postId, userId)
 }

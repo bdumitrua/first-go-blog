@@ -42,7 +42,7 @@ func main() {
 
 			switch r.Method {
 			case http.MethodGet:
-				http.HandleFunc("/posts/", postController.HandleRoutes)
+				postController.HandleRoutes(w, r)
 			case http.MethodPut:
 				middleware.AuthMiddleware(http.HandlerFunc(postController.HandleRoutes)).ServeHTTP(w, r)
 			case http.MethodDelete:
@@ -51,21 +51,14 @@ func main() {
 				http.Error(w, "Route not found", http.StatusNotFound)
 			}
 		} else {
-			switch r.Method {
-			case http.MethodGet:
-				http.HandleFunc("/posts/", postController.HandleRoutes)
-			case http.MethodPost:
-				middleware.AuthMiddleware(http.HandlerFunc(postController.HandleRoutes)).ServeHTTP(w, r)
-			default:
-				http.Error(w, "Route not found", http.StatusNotFound)
-			}
+			http.Error(w, "Route not found", http.StatusNotFound)
 		}
 	}))
 
 	http.Handle("/posts", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			http.HandleFunc("/posts", postController.HandleRoutes)
+			postController.HandleRoutes(w, r)
 		case http.MethodPost:
 			middleware.AuthMiddleware(http.HandlerFunc(postController.HandleRoutes)).ServeHTTP(w, r)
 		default:

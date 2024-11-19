@@ -41,7 +41,7 @@ func (r *repositoryImpl) Login(loginDto *LoginDto) (*User, error) {
 func (r *repositoryImpl) CreateUser(newUserDto *UserCreateDTO) (string, error) {
 	dbEmail := ""
 	err := r.db.QueryRow("SELECT email FROM users WHERE email = ?", newUserDto.Email).Scan(&dbEmail)
-	if err != nil && err == sql.ErrNoRows {
+	if err != nil && err != sql.ErrNoRows {
 		return "", err
 	}
 
