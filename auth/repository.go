@@ -39,6 +39,16 @@ func (r *repositoryImpl) Login(loginDto *LoginDto) (*User, error) {
 }
 
 func (r *repositoryImpl) CreateUser(newUserDto *UserCreateDTO) (string, error) {
+	dbEmail := ""
+	err := r.db.QueryRow("SELECT email FROM users WHERE email = ?", newUserDto.Email).Scan(&dbEmail)
+	if err != nil && err == sql.ErrNoRows {
+		return "", err
+	}
+
+	if dbEmail != "" {
+		return "", errors.New("email already taken")
+	}
+
 	result, err := r.db.Exec("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", newUserDto.Name, newUserDto.Email, newUserDto.Password)
 	if err != nil {
 		return "", err
